@@ -306,6 +306,159 @@ let contadorFrames = 0;
 
 let teclas = {};
 
+
+// CONTROLES TACTILES PARA MOVILES
+const controlesTactiles = {
+    joystickX: 0,
+    joystickY: 0,
+    punteroJoystick: null,
+    punteroMirar: null,
+    ultimaXMirar: 0
+};
+
+const baseJoystick = document.getElementById("joystick");
+const stickJoystick = document.getElementById("joystick-stick");
+const zonaMirar = document.getElementById("zona-mirar");
+const botonInteractuar = document.getElementById("boton-interactuar");
+const botonReiniciar = document.getElementById("boton-reiniciar");
+const controlesMoviles = document.getElementById("controles-moviles");
+
+function actualizarJoystick(evento) {
+    if (!baseJoystick || !stickJoystick) return;
+
+    const rect = baseJoystick.getBoundingClientRect();
+    const centroX = rect.left + rect.width / 2;
+    const centroY = rect.top + rect.height / 2;
+
+    let dx = evento.clientX - centroX;
+    let dy = evento.clientY - centroY;
+
+    const radio = rect.width * 0.34;
+    const distancia = Math.sqrt(dx * dx + dy * dy);
+
+    if (distancia > radio) {
+        dx = (dx / distancia) * radio;
+        dy = (dy / distancia) * radio;
+    }
+
+    controlesTactiles.joystickX = dx / radio;
+    controlesTactiles.joystickY = dy / radio;
+
+    // Zona muerta para evitar movimientos involuntarios.
+    if (Math.abs(controlesTactiles.joystickX) < 0.12) {
+        controlesTactiles.joystickX = 0;
+    }
+    if (Math.abs(controlesTactiles.joystickY) < 0.12) {
+        controlesTactiles.joystickY = 0;
+    }
+
+    stickJoystick.style.left = `${50 + (dx / rect.width) * 100}%`;
+    stickJoystick.style.top = `${50 + (dy / rect.height) * 100}%`;
+}
+
+function soltarJoystick() {
+    controlesTactiles.joystickX = 0;
+    controlesTactiles.joystickY = 0;
+    controlesTactiles.punteroJoystick = null;
+
+    if (stickJoystick) {
+        stickJoystick.style.left = "50%";
+        stickJoystick.style.top = "50%";
+    }
+}
+
+if (baseJoystick && stickJoystick) {
+    baseJoystick.addEventListener("pointerdown", function(evento) {
+        evento.preventDefault();
+        controlesTactiles.punteroJoystick = evento.pointerId;
+        baseJoystick.setPointerCapture(evento.pointerId);
+        actualizarJoystick(evento);
+    });
+
+    baseJoystick.addEventListener("pointermove", function(evento) {
+        if (controlesTactiles.punteroJoystick !== evento.pointerId) return;
+        evento.preventDefault();
+        actualizarJoystick(evento);
+    });
+
+    baseJoystick.addEventListener("pointerup", function(evento) {
+        if (controlesTactiles.punteroJoystick !== evento.pointerId) return;
+        soltarJoystick();
+    });
+
+    baseJoystick.addEventListener("pointercancel", soltarJoystick);
+    baseJoystick.addEventListener("lostpointercapture", soltarJoystick);
+}
+
+// En la mitad derecha se arrastra el dedo para girar la vista.
+if (zonaMirar) {
+    zonaMirar.addEventListener("pointerdown", function(evento) {
+        evento.preventDefault();
+        controlesTactiles.punteroMirar = evento.pointerId;
+        controlesTactiles.ultimaXMirar = evento.clientX;
+        zonaMirar.setPointerCapture(evento.pointerId);
+    });
+
+    zonaMirar.addEventListener("pointermove", function(evento) {
+        if (controlesTactiles.punteroMirar !== evento.pointerId) return;
+        evento.preventDefault();
+
+        const deltaX = evento.clientX - controlesTactiles.ultimaXMirar;
+        controlesTactiles.ultimaXMirar = evento.clientX;
+
+        if (estadoJuego === "jugando") {
+            angulo += deltaX * 0.006;
+        }
+    });
+
+    function soltarMirar(evento) {
+        if (
+            evento &&
+            controlesTactiles.punteroMirar !== evento.pointerId
+        ) return;
+
+        controlesTactiles.punteroMirar = null;
+    }
+
+    zonaMirar.addEventListener("pointerup", soltarMirar);
+    zonaMirar.addEventListener("pointercancel", soltarMirar);
+    zonaMirar.addEventListener("lostpointercapture", soltarMirar);
+}
+
+if (botonInteractuar) {
+    botonInteractuar.addEventListener("click", function(evento) {
+        evento.preventDefault();
+        interactuar();
+    });
+}
+
+if (botonReiniciar) {
+    botonReiniciar.addEventListener("click", function(evento) {
+        evento.preventDefault();
+        if (estadoJuego === "derrota" || estadoJuego === "victoria") {
+            reiniciarJuego();
+        }
+    });
+}
+
+function actualizarVisibilidadControles() {
+    if (!controlesMoviles) return;
+
+    const jugando = estadoJuego === "jugando";
+    const finalizado =
+        estadoJuego === "derrota" || estadoJuego === "victoria";
+
+    if (baseJoystick) baseJoystick.hidden = !jugando;
+    if (zonaMirar) zonaMirar.hidden = !jugando;
+    if (botonInteractuar) botonInteractuar.hidden = !jugando;
+    if (botonReiniciar) botonReiniciar.hidden = !finalizado;
+
+    if (!jugando) {
+        soltarJoystick();
+        controlesTactiles.punteroMirar = null;
+    }
+}
+
 document.addEventListener("keydown", function(evento) {
 
     let tecla = evento.key.toLowerCase();
@@ -394,6 +547,8 @@ function reiniciarJuego() {
     tiempoMensaje = 0;
 
     teclas = {};
+    soltarJoystick();
+    controlesTactiles.punteroMirar = null;
 
 }
 
@@ -1865,6 +2020,7 @@ function dibujarescena() {
 
 function actualizarJugador() {
 
+    // En PC, A y D siguen girando al jugador.
     if (teclas.a) {
         angulo -= velocidadGiro;
     }
@@ -1873,68 +2029,65 @@ function actualizarJugador() {
         angulo += velocidadGiro;
     }
 
+    // W/S y el eje vertical del joystick controlan adelante/atras.
+    let movimientoAdelante =
+        (teclas.w ? 1 : 0) -
+        (teclas.s ? 1 : 0) -
+        controlesTactiles.joystickY;
 
-    let movimiento = 0;
+    // El eje horizontal del joystick permite desplazarse de costado.
+    let movimientoLateral = controlesTactiles.joystickX;
 
-    if (teclas.w) {
-        movimiento += velocidad;
+    // Evita que el movimiento diagonal sea mas rapido.
+    const magnitud = Math.sqrt(
+        movimientoAdelante * movimientoAdelante +
+        movimientoLateral * movimientoLateral
+    );
+
+    if (magnitud > 1) {
+        movimientoAdelante /= magnitud;
+        movimientoLateral /= magnitud;
     }
 
-    if (teclas.s) {
-        movimiento -= velocidad;
-    }
+    const direccionX = Math.cos(angulo);
+    const direccionY = Math.sin(angulo);
 
+    const movimientoX = (
+        direccionX * movimientoAdelante -
+        direccionY * movimientoLateral
+    ) * velocidad;
 
-    let nuevaX =
-        jugadorx + Math.cos(angulo) * movimiento;
+    const movimientoY = (
+        direccionY * movimientoAdelante +
+        direccionX * movimientoLateral
+    ) * velocidad;
 
-    let nuevaY =
-        jugadory + Math.sin(angulo) * movimiento;
+    const nuevaX = jugadorx + movimientoX;
+    const nuevaY = jugadory + movimientoY;
 
     let seMovio = false;
 
-
     if (!haypared(nuevaX, jugadory)) {
-
-        if (movimiento !== 0) {
-            seMovio = true;
-        }
-
+        if (movimientoX !== 0) seMovio = true;
         jugadorx = nuevaX;
-
     }
 
     if (!haypared(jugadorx, nuevaY)) {
-
-        if (movimiento !== 0) {
-            seMovio = true;
-        }
-
+        if (movimientoY !== 0) seMovio = true;
         jugadory = nuevaY;
-
     }
 
-
     // SONIDO DE PASOS
-
     if (seMovio) {
-
         contadorPasos++;
 
         if (contadorPasos >= intervaloPasos) {
-
             reproducirSonido(sonidoPaso);
-
             contadorPasos = 0;
-
         }
-
     } else {
-
         contadorPasos = 0;
-
     }
-
 }
 
 
@@ -1968,6 +2121,8 @@ function actualizar() {
 
     }
 
+
+    actualizarVisibilidadControles();
 
     dibujarescena();
 
