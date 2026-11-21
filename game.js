@@ -91,9 +91,9 @@ function cargarTextura(ruta) {
 }
 
 
-const texturaPared = cargarTextura("texturas/pared_concreto.jpg");
-const texturaPiso = cargarTextura("texturas/piso.jpg");
-const texturaTecho = cargarTextura("texturas/techo.jpg");
+const texturaPared = cargarTextura("texturas/pared_csoncreto.jpg");
+const texturaPiso = cargarTextura("texturas/pisso.jpg");
+const texturaTecho = cargarTextura("texturas/tsecho.jpg");
 
 
 // ============================================
