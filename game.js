@@ -1,4 +1,3 @@
-
 // ============================================
 // LIGHTLESS
 // VERSION 1.2 - SPRITES + SONIDOS + JUMPSCARE
@@ -91,6 +90,12 @@ function cargarTextura(ruta) {
 }
 
 
+// LIGHTLESS puede funcionar sin texturas.
+// Estos objetos desactivan las texturas y permiten usar los colores
+// de reemplazo definidos en dibujarPisoTecho() y dibujarParedes().
+const texturaPiso = { cargada: false };
+const texturaTecho = { cargada: false };
+const texturaPared = { cargada: false };
 
 
 // ============================================
@@ -448,7 +453,7 @@ function haypared(x, y) {
 
 function leerPixel(textura, x, y) {
 
-    if (!textura.cargada) return null;
+    if (!textura || !textura.cargada) return null;
 
     let tx = Math.floor(x * textura.ancho);
     let ty = Math.floor(y * textura.alto);
