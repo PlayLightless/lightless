@@ -1941,7 +1941,8 @@ function dibujarPantallaFinal() {
         ctx.font = "42px monospace";
 
         ctx.fillText(
-            "ESCAPASTE",
+            "4a 44 45 55 4c 48 4f
+",
             CENTROX,
             CENTROY - 15
         );
@@ -1952,7 +1953,7 @@ function dibujarPantallaFinal() {
         ctx.font = "42px monospace";
 
         ctx.fillText(
-            "TE ENCONTRO",
+            "Im your nightmare...",
             CENTROX,
             CENTROY - 15
         );
