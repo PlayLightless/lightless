@@ -1941,8 +1941,7 @@ function dibujarPantallaFinal() {
         ctx.font = "42px monospace";
 
         ctx.fillText(
-            "4a 44 45 55 4c 48 4f
-",
+            "4a 44 45 55 4c 48 4f",
             CENTROX,
             CENTROY - 15
         );
