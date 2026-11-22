@@ -122,7 +122,7 @@ function cargarSprite(ruta) {
 
 const spriteObjeto = cargarSprite("sprites/item.png");
 const spritePuerta = cargarSprite("sprites/puerta.png");
-const spriteMonstruo = cargarSprite("sprites/monstruo.png");
+const spriteMonstruo = cargarSprite("sprites/monstruo.gif");
 const spriteJumpscare = cargarSprite("sprites/jumpscare.png");
 
 
@@ -1941,7 +1941,7 @@ function dibujarPantallaFinal() {
         ctx.font = "42px monospace";
 
         ctx.fillText(
-            "4a 44 45 55 4c 48 4f",
+            "ESCAPASTE",
             CENTROX,
             CENTROY - 15
         );
@@ -1952,7 +1952,7 @@ function dibujarPantallaFinal() {
         ctx.font = "42px monospace";
 
         ctx.fillText(
-            "Im your nightmare...",
+            "TE ENCONTRO",
             CENTROX,
             CENTROY - 15
         );
